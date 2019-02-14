@@ -1,0 +1,26 @@
+{
+  "name": "mortalswat/d3connector",
+  "description": "connector util for doing calls to d3 routines",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Francisco Javier Ponce Rosales",
+      "homepage": "https://www.linkedin.com/in/francisco-ponce/"
+    }
+  ],
+  "require": {
+    "php": ">=5.6",
+    "monolog/monolog": "1.24.0",
+    "ext-json": "*",
+    "ext-dom": "*",
+    "ext-libxml": "*",
+    "ext-simplexml": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "~4.0",
+    "fabpot/php-cs-fixer": "~2.0@dev"
+  },
+  "autoload": {
+    "psr-4": {"mortalswat\\d3connector\\": "src/"}
+  }
+}
