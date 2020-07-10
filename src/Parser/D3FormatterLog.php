@@ -45,7 +45,7 @@ class D3FormatterLog implements FormatterInterface
                 switch ($tittle) {
                     case self::TITTLE_LOG_PREPARACION:
                         $body = $message[self::XML_LOG] . "\n";
-                        $body .= $message[self::SOCKET_LOG] . "\n\n";
+                        $body .= $message[self::SOCKET_LOG] . "\n";
                         break;
                     case self::TITTLE_LOG_LLAMADA:
                     case self::TITTLE_LOG_RESPUESTA:
