@@ -10,6 +10,8 @@ use Monolog\Formatter\FormatterInterface;
  */
 class D3FormatterLog implements FormatterInterface
 {
+    const TRUNCATE_LENGTH = 50;
+
     const TITTLE_LOG = 'Tittle';
     const TITTLE_LOG_PREPARACION = 'Preparacion';
     const TITTLE_LOG_LLAMADA = 'Llamada';
@@ -52,6 +54,12 @@ class D3FormatterLog implements FormatterInterface
                         $body = $this->parseElementsD3($message[self::BODY_LOG]);
                         break;
                     case self::TITTLE_LOG_RESPUESTA_ARRAY:
+                        if (is_array($message[self::BODY_LOG]))
+                            array_walk_recursive($message[self::BODY_LOG], function (&$item, $key) {
+                                if (strlen($item) > self::TRUNCATE_LENGTH) {
+                                    $item = mb_substr($item, 0, self::TRUNCATE_LENGTH) . ' . . .';
+                                }
+                            });
                         ob_start();
                         $body = var_export($message[self::BODY_LOG], true);
                         break;
@@ -81,6 +89,12 @@ class D3FormatterLog implements FormatterInterface
         $result = '';
 
         if (is_array($params)) {
+            array_walk_recursive($params, function (&$item, $key) {
+                if (strlen($item) > self::TRUNCATE_LENGTH) {
+                    $item = mb_substr($item, 0, self::TRUNCATE_LENGTH) . ' . . .';
+                }
+            });
+
             foreach ($params as $param) {
                 if (is_array($param)) {
                     $count = 1;
