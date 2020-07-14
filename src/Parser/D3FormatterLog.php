@@ -10,7 +10,7 @@ use Monolog\Formatter\FormatterInterface;
  */
 class D3FormatterLog implements FormatterInterface
 {
-    const TRUNCATE_LENGTH = 50;
+    const TRUNCATE_LENGTH = 100;
 
     const TITTLE_LOG = 'Tittle';
     const TITTLE_LOG_PREPARACION = 'Preparacion';
