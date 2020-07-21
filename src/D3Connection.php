@@ -36,12 +36,14 @@ class D3Connection
     /**
      * D3Connection constructor.
      * @param $xmlFile
-     * @param null|string $logger
-     * @param bool $extended
+     * @param null $logger
+     * @param int $routineTimeout
+     * @param int $sockopenTimeout
+     * @param bool $extendedLog
      * @throws D3Exception
      * @throws \Exception
      */
-    public function __construct($xmlFile, $logger = null, $extended = false)
+    public function __construct($xmlFile, $logger = null, $routineTimeout = 30, $sockopenTimeout = 5, $extendedLog = false)
     {
         if ($logger !== null) {
             $this->logger = new Logger('files');
@@ -57,10 +59,10 @@ class D3Connection
             ];
         }
 
-        $this->extendedLog = $extended;
+        $this->extendedLog = $extendedLog;
 
-        $this->sockopenTimeout = 5;
-        $this->d3routineTimeout = 30;
+        $this->sockopenTimeout = $sockopenTimeout;
+        $this->d3routineTimeout = $routineTimeout;
 
         $this->loadD3Connection($xmlFile);
         $this->isConnected = false;
