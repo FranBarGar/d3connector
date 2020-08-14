@@ -37,6 +37,7 @@ class D3TimerFormatterLog implements FormatterInterface
                         $body = $message[D3FormatterLog::XML_LOG] . "\n";
                         $body .= $message[D3FormatterLog::SOCKET_LOG] . "\n";
                         break;
+                    case D3FormatterLog::TITTLE_LOG_ERROR:
                     case D3FormatterLog::TITTLE_LOG_LLAMADA:
                     case D3FormatterLog::TITTLE_LOG_RESPUESTA:
                         $body = "";
