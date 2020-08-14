@@ -39,7 +39,7 @@ class D3TimerFormatterLog implements FormatterInterface
                         break;
                     case D3FormatterLog::TITTLE_LOG_LLAMADA:
                     case D3FormatterLog::TITTLE_LOG_RESPUESTA:
-                        $body = "\n";
+                        $body = "";
                         break;
                     default:
                         $body = $message[D3FormatterLog::BODY_LOG];
