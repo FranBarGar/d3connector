@@ -8,6 +8,7 @@ use mortalswat\d3connector\Interfaces\JD3RequestDataInterface;
 use mortalswat\d3connector\Parser\D3FormatterLog;
 use mortalswat\d3connector\Parser\D3RequestParser;
 use mortalswat\d3connector\Parser\D3ResultParser;
+use mortalswat\d3connector\Parser\D3TimerFormatterLog;
 
 /**
  * La clase para la conexión al servidor D3
@@ -24,26 +25,51 @@ class D3Connection
     private $sockopenTimeout;
     /** @var int */
     private $d3routineTimeout;
+    /** @var string */
+    private $xmlFile;
     /** @var bool */
     private $isConnected;
     /** @var Logger|null */
     private $logger;
+    /** @var Logger|null */
+    private $timeLogger;
     /** @var array */
     private $logInfo;
     /** @var array */
+    private $timeLogInfo;
+    /** @var bool */
     private $extendedLog;
 
     /**
      * D3Connection constructor.
      * @param $xmlFile
      * @param null $logger
+     * @param null $timeLogger
+     * @param bool $extendedLog
      * @param int $routineTimeout
      * @param int $sockopenTimeout
-     * @param bool $extendedLog
-     * @throws D3Exception
      * @throws \Exception
      */
-    public function __construct($xmlFile, $logger = null, $routineTimeout = 30, $sockopenTimeout = 5, $extendedLog = false)
+    public function __construct($xmlFile, $logger = null, $timeLogger = null, $extendedLog = false, $routineTimeout = 30, $sockopenTimeout = 5)
+    {
+        $this->setLogger($logger);
+        $this->setTimeLogger($timeLogger);
+
+        $this->extendedLog = $extendedLog;
+
+        $this->sockopenTimeout = $sockopenTimeout;
+        $this->d3routineTimeout = $routineTimeout;
+
+        $this->xmlFile = $xmlFile;
+        $this->isConnected = false;
+    }
+
+    /**
+     * Configura el log generico
+     * @param $logger
+     * @throws \Exception
+     */
+    private function setLogger($logger)
     {
         if ($logger !== null) {
             $this->logger = new Logger('files');
@@ -54,18 +80,30 @@ class D3Connection
                 /** Preparamos el log de preparación para la llamada */
                 [
                     D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_PREPARACION,
-                    D3FormatterLog::DATETIME_LOG => (new \DateTime())->format('Y-m-d H:i:s.u')
                 ]
             ];
         }
+    }
 
-        $this->extendedLog = $extendedLog;
-
-        $this->sockopenTimeout = $sockopenTimeout;
-        $this->d3routineTimeout = $routineTimeout;
-
-        $this->loadD3Connection($xmlFile);
-        $this->isConnected = false;
+    /**
+     * Configura el log basico para mostrar solo los tiempos
+     * @param $logger
+     * @throws \Exception
+     */
+    private function setTimeLogger($logger)
+    {
+        if ($logger !== null) {
+            $this->timeLogger = new Logger('files');
+            $infoHandler = new StreamHandler($logger);
+            $infoHandler->setFormatter(new D3TimerFormatterLog());
+            $this->timeLogger->pushHandler($infoHandler);
+            $this->timeLogInfo = [
+                /** Preparamos el log de preparación para la llamada */
+                [
+                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_PREPARACION,
+                ]
+            ];
+        }
     }
 
     /**
@@ -107,6 +145,9 @@ class D3Connection
      */
     public function open()
     {
+        $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = (new \DateTime())->format('Y-m-d H:i:s.u');
+        $this->loadD3Connection($this->xmlFile);
+
         $socketLog = "SOCKET:";
         $socketStart = (new \DateTime())->format('Y-m-d H:i:s.u');
         try {
@@ -157,14 +198,14 @@ class D3Connection
     public function call(JD3RequestDataInterface $data)
     {
         try {
-
             if ($data->getRoutineName() === '') {
                 throw new D3Exception('D3: Falta el el nombre de la subrutina');
             }
 
-            $nbpar = count($data->arrayToD3());
+            $arrToD3 = $data->arrayToD3();
+            $nbpar = count($arrToD3);
 
-            if (!is_array($data->arrayToD3()) || $nbpar < 1) {
+            if (!is_array($arrToD3) || $nbpar < 1) {
                 throw new D3Exception('D3: Faltan los parametros de la subrutina');
             }
 
@@ -174,7 +215,7 @@ class D3Connection
                     $data->getRoutineName(),
                     $nbpar
                 ],
-                $data->arrayToD3()
+                $arrToD3
             );
 
             $requestParser = new D3RequestParser();
@@ -184,16 +225,20 @@ class D3Connection
                 $this->open();
             }
 
-            if ($this->logger !== null) {
-                $this->logInfo[] = [
-                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_LLAMADA,
-                    D3FormatterLog::BODY_LOG => $requestD3Array,
-                    D3FormatterLog::DATETIME_LOG => (new \DateTime())->format('Y-m-d H:i:s.u')
-                ];
-            }
+            $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
+            $this->logInfo[] = [
+                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_LLAMADA,
+                D3FormatterLog::BODY_LOG => $requestD3Array,
+                D3FormatterLog::DATETIME_LOG => $datetime
+            ];
+            $this->timeLogInfo[] = [
+                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_LLAMADA,
+                D3FormatterLog::BODY_LOG => $data->getRoutineName(),
+                D3FormatterLog::DATETIME_LOG => $datetime
+            ];
 
             $responseD3 = $this->send($request);
-            if ($this->logger !== null && $this->extendedLog === true) {
+            if ($this->extendedLog === true) {
                 $this->logInfo[] = [
                     D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA_BRUTA,
                     D3FormatterLog::BODY_LOG => utf8_encode($responseD3),
@@ -210,36 +255,40 @@ class D3Connection
 
             $utf8responseD3Array = self::convertFromLatin1ToUtf8Recursively($responseD3Array);
 
-            if ($this->logger !== null) {
-                $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
-                if ($this->extendedLog === true) {
-                    $this->logInfo[] = [
-                        D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA,
-                        D3FormatterLog::BODY_LOG => $utf8responseD3Array,
-                        D3FormatterLog::DATETIME_LOG => $datetime
-                    ];
-                }
-
+            $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
+            if ($this->extendedLog === true) {
                 $this->logInfo[] = [
-                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA_ARRAY,
+                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA,
                     D3FormatterLog::BODY_LOG => $utf8responseD3Array,
                     D3FormatterLog::DATETIME_LOG => $datetime
                 ];
-
-                $this->saveLog();
             }
+            $this->logInfo[] = [
+                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA_ARRAY,
+                D3FormatterLog::BODY_LOG => $utf8responseD3Array,
+                D3FormatterLog::DATETIME_LOG => $datetime
+            ];
+            $this->timeLogInfo[] = [
+                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA,
+                D3FormatterLog::BODY_LOG => $data->getRoutineName(),
+                D3FormatterLog::DATETIME_LOG => $datetime
+            ];
+            $this->saveLog();
 
             return $utf8responseD3Array;
         } catch (D3Exception $exception) {
-            if ($this->logger !== null) {
-                $this->logInfo[] = [
-                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_ERROR,
-                    D3FormatterLog::BODY_LOG => '(D3Exception) ' . $exception->getMessage(),
-                    D3FormatterLog::DATETIME_LOG => (new \DateTime())->format('Y-m-d H:i:s.u')
-                ];
-
-                $this->saveLog();
-            }
+            $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
+            $this->logInfo[] = [
+                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_ERROR,
+                D3FormatterLog::BODY_LOG => '(D3Exception) ' . $exception->getMessage(),
+                D3FormatterLog::DATETIME_LOG => $datetime
+            ];
+            $this->timeLogInfo[] = [
+                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_ERROR,
+                D3FormatterLog::BODY_LOG => '(D3Exception) ' . $exception->getMessage(),
+                D3FormatterLog::DATETIME_LOG => $datetime
+            ];
+            $this->saveLog();
 
             throw $exception;
         }
@@ -343,6 +392,11 @@ class D3Connection
     {
         if ($this->logger !== null) {
             $this->logger->info(json_encode($this->logInfo));
+        }
+        if ($this->timeLogger !== null) {
+            $this->timeLogInfo[0] = $this->logInfo[0];
+
+            $this->timeLogger->info(json_encode($this->timeLogInfo));
         }
     }
 }
