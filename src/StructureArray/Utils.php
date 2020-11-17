@@ -15,16 +15,18 @@ class Utils
      * @param bool $multiple
      * @return null|array
      */
-    public static function restructureInverse (array $array, $initPosition = 0, $length = null, $multiple = false)
+    public static function restructureInverse(array $array, $initPosition = 0, $length = null, $multiple = false)
     {
         $subArray = array_slice($array, $initPosition, $length);
 
-        if($subArray[0] === null){
+        if ($subArray[0] === null) {
             return null;
         }
 
         $newData = array_map(
-            function ($element){return is_array($element) ? $element : [$element];},
+            function ($element) {
+                return is_array($element) ? $element : [$element];
+            },
             $subArray
         );
 

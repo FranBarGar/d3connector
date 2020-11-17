@@ -1,11 +1,14 @@
 <?php
 
-namespace mortalswat\d3connector\StructureArray;;
+namespace mortalswat\d3connector\StructureArray;
+use Exception;
+
+;
 
 /**
  * Class StructureArrayException
- * @package Domain\StructureArray
+ * @package mortalswat\d3connector\StructureArray
  */
-class StructureArrayException extends \Exception
+class StructureArrayException extends Exception
 {
 }

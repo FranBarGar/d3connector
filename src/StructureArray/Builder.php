@@ -2,9 +2,11 @@
 
 namespace mortalswat\d3connector\StructureArray;
 
+use Exception;
+
 /**
  * Class Builder
- * @package Domain\StructureArray
+ * @package mortalswat\d3connector\StructureArray
  */
 class Builder
 {
@@ -59,7 +61,7 @@ class Builder
             return self::recursiveParse($data, $structure);
         } catch (StructureArrayException $exception) {
             throw new StructureArrayException($exception->getMessage());
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             throw new StructureArrayException('Error al intentar procesar la estructura esperada.');
         }
     }
@@ -72,18 +74,18 @@ class Builder
      */
     private static function recursiveParse($data, Structure $structure)
     {
-        if ($structure->isUndefined()){
+        if ($structure->isUndefined()) {
             return self::UNDEFINED;
         }
 
-        if (!is_array($data)){
-            if ($structure->isObject()){
+        if (!is_array($data)) {
+            if ($structure->isObject()) {
                 // Is possible that the object only have one param
                 self::recursiveParse([$data], $structure);
             }
 
-            if ($structure->isNumeric()){
-                if($data !== '' && !is_numeric($data)) {
+            if ($structure->isNumeric()) {
+                if ($data !== '' && !is_numeric($data)) {
                     throw new StructureArrayException('Se esperaba un valor numérico en la propiedad"' . $structure->getName() . '".');
                 }
 
@@ -93,30 +95,30 @@ class Builder
             return $data;
         }
 
-        if (!$structure->isObject()){
-            throw new StructureArrayException('Datos recibidos no se esperaba de tipo array para la propiedad "'.$structure->getName().'".');
+        if (!$structure->isObject()) {
+            throw new StructureArrayException('Datos recibidos no se esperaba de tipo array para la propiedad "' . $structure->getName() . '".');
         }
 
         $numValues = count($data);
         $numProperties = count($structure->getProperties());
 
-        if ($numValues !== $numProperties){
-            throw new StructureArrayException('Número de datos recibidos no se corresponde a estructura esperada para la propiedad "'.$structure->getName().'".');
+        if ($numValues !== $numProperties) {
+            throw new StructureArrayException('Número de datos recibidos no se corresponde a estructura esperada para la propiedad "' . $structure->getName() . '".');
         }
 
-        $asociativeData = [];
+        $associativeData = [];
 
-        for ($index = 0; $index < $numProperties; ++$index){
+        for ($index = 0; $index < $numProperties; ++$index) {
             $newStructure = $structure->getProperties()[$index];
 
             if (!$newStructure->isUndefined()) {
-                $asociativeData[$newStructure->getName()] = self::build(
+                $associativeData[$newStructure->getName()] = self::build(
                     $data[$index],
                     $newStructure
                 );
             }
         }
 
-        return $asociativeData;
+        return $associativeData;
     }
 }

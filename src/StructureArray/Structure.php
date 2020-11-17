@@ -4,7 +4,7 @@ namespace mortalswat\d3connector\StructureArray;
 
 /**
  * Class Structure
- * @package DomainStructureureArray
+ * @package mortalswat\d3connector\StructureArray
  */
 class Structure
 {
@@ -68,11 +68,31 @@ class Structure
     }
 
     /**
+     * @param $name
+     * @return $this
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
      * @return bool
      */
     public function isMultiple()
     {
         return $this->multiple;
+    }
+
+    /**
+     * @param $multiple
+     * @return $this
+     */
+    public function setMultiple($multiple)
+    {
+        $this->multiple = $multiple;
+        return $this;
     }
 
     /**
@@ -105,26 +125,6 @@ class Structure
     public function getProperties()
     {
         return $this->object;
-    }
-
-    /**
-     * @param $name
-     * @return $this
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * @param $multiple
-     * @return $this
-     */
-    public function setMultiple($multiple)
-    {
-        $this->multiple = $multiple;
-        return $this;
     }
 
     /**

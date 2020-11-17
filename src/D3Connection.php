@@ -2,6 +2,10 @@
 
 namespace mortalswat\d3connector;
 
+use DateInterval;
+use DateTime;
+use DOMDocument;
+use Exception;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use mortalswat\d3connector\Interfaces\JD3RequestDataInterface;
@@ -9,9 +13,11 @@ use mortalswat\d3connector\Parser\D3FormatterLog;
 use mortalswat\d3connector\Parser\D3RequestParser;
 use mortalswat\d3connector\Parser\D3ResultParser;
 use mortalswat\d3connector\Parser\D3TimerFormatterLog;
+use SimpleXMLElement;
 
 /**
- * La clase para la conexión al servidor D3
+ * Class D3Connection
+ * @package mortalswat\d3connector
  */
 class D3Connection
 {
@@ -48,7 +54,7 @@ class D3Connection
      * @param bool $extendedLog
      * @param int $routineTimeout
      * @param int $sockopenTimeout
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct($xmlFile, $logger = null, $timeLogger = null, $extendedLog = false, $routineTimeout = 30, $sockopenTimeout = 5)
     {
@@ -67,7 +73,7 @@ class D3Connection
     /**
      * Configura el log generico
      * @param $logger
-     * @throws \Exception
+     * @throws Exception
      */
     private function setLogger($logger)
     {
@@ -88,7 +94,7 @@ class D3Connection
     /**
      * Configura el log basico para mostrar solo los tiempos
      * @param $logger
-     * @throws \Exception
+     * @throws Exception
      */
     private function setTimeLogger($logger)
     {
@@ -104,90 +110,6 @@ class D3Connection
                 ]
             ];
         }
-    }
-
-    /**
-     * @param $xml
-     *
-     * @return array
-     */
-    private static function loadSettings($xml)
-    {
-        $xmlRequest = new \DOMDocument();
-        $xmlRequest->load($xml, LIBXML_NOBLANKS);
-
-        $xmlConfig = new \SimpleXMLElement($xmlRequest->saveXML());
-
-        return self::toArray($xmlConfig);
-    }
-
-    /**
-     * @param \SimpleXMLElement $xmlObject
-     * @return array
-     */
-    public static function toArray(\SimpleXMLElement $xmlObject)
-    {
-        $subtree = [];
-
-        foreach ($xmlObject as $rootNode) {
-            if ($rootNode->count() === 0) {
-                $subtree[$rootNode->getName()] = (string)$rootNode;
-            } else {
-                $subtree[$rootNode->getName()][] = self::toArray($rootNode);
-            }
-        }
-
-        return $subtree;
-    }
-
-    /**
-     * @throws D3Exception
-     */
-    public function open()
-    {
-        $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = (new \DateTime())->format('Y-m-d H:i:s.u');
-        $this->loadD3Connection($this->xmlFile);
-
-        $socketLog = "SOCKET:";
-        $socketStart = (new \DateTime())->format('Y-m-d H:i:s.u');
-        try {
-            $this->socket = fsockopen($this->server, $this->port, $errno, $errstr, $this->sockopenTimeout);
-            $socketOpenEnd = (new \DateTime())->format('Y-m-d H:i:s.u');
-            $socketLog .= "\n\t($socketStart -> $socketOpenEnd) Socket para linea";
-        } catch (\Exception $exception) {
-            $socketOpenEnd = (new \DateTime())->format('Y-m-d H:i:s.u');
-            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
-                "($socketStart -> $socketOpenEnd) $socketLog\n\t($socketStart -> $socketOpenEnd) Error socket para linea";
-            throw new D3Exception('D3: No se ha podido establecer conexión');
-        }
-
-        $newport = fgets($this->socket, 9);
-
-        fclose($this->socket);
-        $newLineEnd = (new \DateTime())->format('Y-m-d H:i:s.u');
-
-        if (false === $newport) {
-            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
-                "($socketStart -> $newLineEnd) $socketLog\n\t($socketOpenEnd -> $newLineEnd) Ninguna linea disponible";
-            throw new D3Exception('D3: No existen lineas disponibles');
-        }
-        $socketLog .= "\n\t($socketOpenEnd -> $newLineEnd) Obtencion de linea";
-
-        //Ha retornado un puerto libre
-        $this->port = $newport;
-        try {
-            $this->socket = fsockopen($this->server, $newport, $errno, $errstr, $this->sockopenTimeout);
-            $newLineSocketEnd = (new \DateTime())->format('Y-m-d H:i:s.u');
-            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
-                "($socketStart -> $newLineSocketEnd) $socketLog\n\t($newLineEnd -> $newLineSocketEnd) Linea abierta";
-        } catch (\Exception $exception) {
-            $newLineSocketEnd = (new \DateTime())->format('Y-m-d H:i:s.u');
-            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
-                "($socketStart -> $newLineSocketEnd) $socketLog\n\t($newLineEnd -> $newLineSocketEnd) Error socket de linea";
-            throw new D3Exception('D3: No se ha podido conectar con la linea');
-        }
-
-        $this->isConnected = true;
     }
 
     /**
@@ -225,7 +147,7 @@ class D3Connection
                 $this->open();
             }
 
-            $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
+            $datetime = (new DateTime())->format('Y-m-d H:i:s.u');
             $this->logInfo[] = [
                 D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_LLAMADA,
                 D3FormatterLog::BODY_LOG => $requestD3Array,
@@ -242,7 +164,7 @@ class D3Connection
                 $this->logInfo[] = [
                     D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA_BRUTA,
                     D3FormatterLog::BODY_LOG => utf8_encode($responseD3),
-                    D3FormatterLog::DATETIME_LOG => (new \DateTime())->format('Y-m-d H:i:s.u')
+                    D3FormatterLog::DATETIME_LOG => (new DateTime())->format('Y-m-d H:i:s.u')
                 ];
             }
 
@@ -255,7 +177,7 @@ class D3Connection
 
             $utf8responseD3Array = self::convertFromLatin1ToUtf8Recursively($responseD3Array);
 
-            $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
+            $datetime = (new DateTime())->format('Y-m-d H:i:s.u');
             if ($this->extendedLog === true) {
                 $this->logInfo[] = [
                     D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA,
@@ -277,7 +199,7 @@ class D3Connection
 
             return $utf8responseD3Array;
         } catch (D3Exception $exception) {
-            $datetime = (new \DateTime())->format('Y-m-d H:i:s.u');
+            $datetime = (new DateTime())->format('Y-m-d H:i:s.u');
             $this->logInfo[] = [
                 D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_ERROR,
                 D3FormatterLog::BODY_LOG => '(D3Exception) ' . $exception->getMessage(),
@@ -295,13 +217,117 @@ class D3Connection
     }
 
     /**
+     * @throws D3Exception
+     */
+    public function open()
+    {
+        $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = (new DateTime())->format('Y-m-d H:i:s.u');
+        $this->loadD3Connection($this->xmlFile);
+
+        $socketLog = "SOCKET:";
+        $socketStart = (new DateTime())->format('Y-m-d H:i:s.u');
+        try {
+            $this->socket = fsockopen($this->server, $this->port, $errno, $errstr, $this->sockopenTimeout);
+            $socketOpenEnd = (new DateTime())->format('Y-m-d H:i:s.u');
+            $socketLog .= "\n\t($socketStart -> $socketOpenEnd) Socket para linea";
+        } catch (Exception $exception) {
+            $socketOpenEnd = (new DateTime())->format('Y-m-d H:i:s.u');
+            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
+                "($socketStart -> $socketOpenEnd) $socketLog\n\t($socketStart -> $socketOpenEnd) Error socket para linea";
+            throw new D3Exception('D3: No se ha podido establecer conexión');
+        }
+
+        $newport = fgets($this->socket, 9);
+
+        fclose($this->socket);
+        $newLineEnd = (new DateTime())->format('Y-m-d H:i:s.u');
+
+        if (false === $newport) {
+            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
+                "($socketStart -> $newLineEnd) $socketLog\n\t($socketOpenEnd -> $newLineEnd) Ninguna linea disponible";
+            throw new D3Exception('D3: No existen lineas disponibles');
+        }
+        $socketLog .= "\n\t($socketOpenEnd -> $newLineEnd) Obtencion de linea";
+
+        //Ha retornado un puerto libre
+        $this->port = $newport;
+        try {
+            $this->socket = fsockopen($this->server, $newport, $errno, $errstr, $this->sockopenTimeout);
+            $newLineSocketEnd = (new DateTime())->format('Y-m-d H:i:s.u');
+            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
+                "($socketStart -> $newLineSocketEnd) $socketLog\n\t($newLineEnd -> $newLineSocketEnd) Linea abierta";
+        } catch (Exception $exception) {
+            $newLineSocketEnd = (new DateTime())->format('Y-m-d H:i:s.u');
+            $this->logInfo[0][D3FormatterLog::SOCKET_LOG] =
+                "($socketStart -> $newLineSocketEnd) $socketLog\n\t($newLineEnd -> $newLineSocketEnd) Error socket de linea";
+            throw new D3Exception('D3: No se ha podido conectar con la linea');
+        }
+
+        $this->isConnected = true;
+    }
+
+    /**
+     * @param $xmlFile
+     * @throws D3Exception
+     */
+    public function loadD3Connection($xmlFile)
+    {
+        $xmlStart = (new DateTime())->format('Y-m-d H:i:s.u');
+        $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = $xmlStart;
+
+        try {
+            $settings = self::loadSettings($xmlFile);
+            $this->port = $settings['server'][0]['mainport'];
+            $this->server = $settings['server'][0]['host'];
+            $this->logInfo[0][D3FormatterLog::XML_LOG] = "($xmlStart -> " . (new DateTime())->format('Y-m-d H:i:s.u') . ') XML';
+        } catch (Exception $exception) {
+            $this->logInfo[0][D3FormatterLog::XML_LOG] = "($xmlStart -> " . (new DateTime())->format('Y-m-d H:i:s.u') . ') Error XML';
+            throw new D3Exception('D3: Error al cargar el xml de conexión' . $exception->getMessage());
+        }
+    }
+
+    /**
+     * @param $xml
+     *
+     * @return array
+     */
+    private static function loadSettings($xml)
+    {
+        $xmlRequest = new DOMDocument();
+        $xmlRequest->load($xml, LIBXML_NOBLANKS);
+
+        $xmlConfig = new SimpleXMLElement($xmlRequest->saveXML());
+
+        return self::toArray($xmlConfig);
+    }
+
+    /**
+     * @param SimpleXMLElement $xmlObject
+     * @return array
+     */
+    public static function toArray(SimpleXMLElement $xmlObject)
+    {
+        $subtree = [];
+
+        foreach ($xmlObject as $rootNode) {
+            if ($rootNode->count() === 0) {
+                $subtree[$rootNode->getName()] = (string)$rootNode;
+            } else {
+                $subtree[$rootNode->getName()][] = self::toArray($rootNode);
+            }
+        }
+
+        return $subtree;
+    }
+
+    /**
      * @param $request
      * @return string
      * @throws D3Exception
      */
     public function send($request)
     {
-        $before = new \DateTime();
+        $before = new DateTime();
         stream_set_timeout($this->socket, $this->d3routineTimeout);
 
         if (!$this->isConnected) {
@@ -329,33 +355,13 @@ class D3Connection
             $reply .= $data;
             $length -= strlen($data);
         }
-        $after = new \DateTime();
-        if ($after > $before->add(\DateInterval::createFromDateString(
+        $after = new DateTime();
+        if ($after > $before->add(DateInterval::createFromDateString(
                 '+' . $this->d3routineTimeout . ' seconds'
             )))
             throw new D3Exception('D3: La petición ha tardado más de ' . $this->d3routineTimeout . ' segundos en ser procesada');
 
         return $reply;
-    }
-
-    /**
-     * @param $xmlFile
-     * @throws D3Exception
-     */
-    public function loadD3Connection($xmlFile)
-    {
-        $xmlStart = (new \DateTime())->format('Y-m-d H:i:s.u');
-        $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = $xmlStart;
-
-        try {
-            $settings = self::loadSettings($xmlFile);
-            $this->port = $settings['server'][0]['mainport'];
-            $this->server = $settings['server'][0]['host'];
-            $this->logInfo[0][D3FormatterLog::XML_LOG] = "($xmlStart -> " . (new \DateTime())->format('Y-m-d H:i:s.u') . ') XML';
-        } catch (\Exception $exception) {
-            $this->logInfo[0][D3FormatterLog::XML_LOG] = "($xmlStart -> " . (new \DateTime())->format('Y-m-d H:i:s.u') . ') Error XML';
-            throw new D3Exception('D3: Error al cargar el xml de conexión' . $exception->getMessage());
-        }
     }
 
     /**

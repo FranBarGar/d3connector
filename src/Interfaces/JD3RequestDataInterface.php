@@ -3,7 +3,8 @@
 namespace mortalswat\d3connector\Interfaces;
 
 /**
- * Interface JD3RequestDataInterface.
+ * Interface JD3RequestDataInterface
+ * @package mortalswat\d3connector\Interfaces
  */
 interface JD3RequestDataInterface
 {
