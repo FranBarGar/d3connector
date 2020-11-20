@@ -146,6 +146,8 @@ class D3Connection
             if (!$this->isConnected) {
                 $this->open();
             }
+            $this->logInfo = [$this->logInfo[0]];
+            $this->timeLogInfo = [$this->logInfo[0]];
 
             $datetime = (new DateTime())->format('Y-m-d H:i:s.u');
             $this->logInfo[] = [
@@ -153,11 +155,13 @@ class D3Connection
                 D3FormatterLog::BODY_LOG => $requestD3Array,
                 D3FormatterLog::DATETIME_LOG => $datetime
             ];
-            $this->timeLogInfo[] = [
-                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_LLAMADA,
-                D3FormatterLog::BODY_LOG => $data->getRoutineName(),
-                D3FormatterLog::DATETIME_LOG => $datetime
-            ];
+            if ($this->timeLogger !== null) {
+                $this->timeLogInfo[] = [
+                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_LLAMADA,
+                    D3FormatterLog::BODY_LOG => $data->getRoutineName(),
+                    D3FormatterLog::DATETIME_LOG => $datetime
+                ];
+            }
 
             $responseD3 = $this->send($request);
             if ($this->extendedLog === true) {
@@ -190,11 +194,13 @@ class D3Connection
                 D3FormatterLog::BODY_LOG => $utf8responseD3Array,
                 D3FormatterLog::DATETIME_LOG => $datetime
             ];
-            $this->timeLogInfo[] = [
-                D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA,
-                D3FormatterLog::BODY_LOG => $data->getRoutineName(),
-                D3FormatterLog::DATETIME_LOG => $datetime
-            ];
+            if ($this->timeLogger !== null) {
+                $this->timeLogInfo[] = [
+                    D3FormatterLog::TITTLE_LOG => D3FormatterLog::TITTLE_LOG_RESPUESTA,
+                    D3FormatterLog::BODY_LOG => $data->getRoutineName(),
+                    D3FormatterLog::DATETIME_LOG => $datetime
+                ];
+            }
             $this->saveLog();
 
             return $utf8responseD3Array;
@@ -400,8 +406,6 @@ class D3Connection
             $this->logger->info(json_encode($this->logInfo));
         }
         if ($this->timeLogger !== null) {
-            $this->timeLogInfo[0] = $this->logInfo[0];
-
             $this->timeLogger->info(json_encode($this->timeLogInfo));
         }
     }
