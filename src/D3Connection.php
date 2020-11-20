@@ -35,6 +35,8 @@ class D3Connection
     private $xmlFile;
     /** @var bool */
     private $isConnected;
+    /** @var bool */
+    private $isXmlLoaded;
     /** @var Logger|null */
     private $logger;
     /** @var Logger|null */
@@ -68,6 +70,7 @@ class D3Connection
 
         $this->xmlFile = $xmlFile;
         $this->isConnected = false;
+        $this->isXmlLoaded = false;
     }
 
     /**
@@ -227,8 +230,10 @@ class D3Connection
      */
     public function open()
     {
-        $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = (new DateTime())->format('Y-m-d H:i:s.u');
-        $this->loadD3Connection($this->xmlFile);
+        if ($this->isXmlLoaded === false) {
+            $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = (new DateTime())->format('Y-m-d H:i:s.u');
+            $this->loadD3Connection($this->xmlFile);
+        }
 
         $socketLog = "SOCKET:";
         $socketStart = (new DateTime())->format('Y-m-d H:i:s.u');
@@ -290,6 +295,8 @@ class D3Connection
             $this->logInfo[0][D3FormatterLog::XML_LOG] = "($xmlStart -> " . (new DateTime())->format('Y-m-d H:i:s.u') . ') Error XML';
             throw new D3Exception('D3: Error al cargar el xml de conexión' . $exception->getMessage());
         }
+
+        $this->isXmlLoaded = true;
     }
 
     /**
