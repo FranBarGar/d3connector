@@ -178,10 +178,12 @@ class D3Connection
             $resultParser = new D3ResultParser();
             $responseD3Array = $resultParser->parseElementsRecursive($responseD3);
 
-            // Eliminamos el primer elemento del array (0) y el último elemento ''
-            array_splice($responseD3Array, 0, 1);
-            array_splice($responseD3Array, -1, 1);
-
+            if ($responseD3Array !== null) {
+                // Eliminamos el primer elemento del array (0) y el último elemento ''
+                array_splice($responseD3Array, 0, 1);
+                array_splice($responseD3Array, -1, 1);
+            }
+            
             $utf8responseD3Array = self::convertFromLatin1ToUtf8Recursively($responseD3Array);
 
             $datetime = (new DateTime())->format('Y-m-d H:i:s.u');
