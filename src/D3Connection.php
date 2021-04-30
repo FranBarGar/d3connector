@@ -260,7 +260,7 @@ class D3Connection
             $settings = self::loadSettings($xmlFile);
 
             if (Utils::getProperty($settings, 'active', '0') === '0') {
-                throw new D3Exception('D3: El pool de conexiones está deshabilitado.');
+                throw new D3Exception('El pool de conexiones está deshabilitado');
             }
 
             $serverSettings = Utils::getProperty($settings, 'server');
@@ -269,18 +269,18 @@ class D3Connection
             }
 
             if (!(
-                $serverSettings === null &&
+                $serverSettings !== null &&
                 isset($serverSettings['mainport']) &&
                 isset($serverSettings['host']) &&
                 isset($serverSettings['timeout'])
             )) {
-                throw new D3Exception('D3: El pool de conexiones no está correctamente configurado.');
+                throw new D3Exception('El pool de conexiones no está correctamente configurado');
             }
 
             $serverTimeout = $serverSettings['timeout'];
             $this->sockopenMainTimeout = Utils::getProperty($serverTimeout, 'main', 5);
             $this->sockopenChildTimeout = Utils::getProperty($serverTimeout, 'child', 5);
-            $this->d3routineTimeout = Utils::getProperty($serverTimeout, 'io', 30);
+            $this->d3routineTimeout = Utils::getProperty($serverTimeout, 'io', 60);
 
             $this->port = $serverSettings['mainport'];
             $this->server = $serverSettings['host'];
@@ -288,7 +288,7 @@ class D3Connection
             $this->logInfo[0][D3FormatterLog::XML_LOG] = '($xmlStart -> ' . Utils::getDate() . ') XML';
         } catch (Exception $exception) {
             $this->logInfo[0][D3FormatterLog::XML_LOG] = '($xmlStart -> ' . Utils::getDate() . ') Error XML';
-            throw new D3Exception('D3: Error al cargar el xml de conexión' . $exception->getMessage());
+            throw new D3Exception('D3: Error al cargar el xml de conexión (' . $exception->getMessage() . ')');
         }
 
         $this->isXmlLoaded = true;
