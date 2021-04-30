@@ -18,7 +18,7 @@ class Builder
      * @return array
      * @throws StructureArrayException
      */
-    public static function buildWithFirstLevel($data, Structure $structure)
+    public static function buildWithFirstLevel($data, Structure $structure): array
     {
         return [$structure->getName() => self::build($data, $structure)];
     }
@@ -29,18 +29,12 @@ class Builder
      * @return array
      * @throws StructureArrayException
      */
-    public static function build($data, Structure $structure)
+    public static function build($data, Structure $structure): array
     {
         try {
-            $isArray = is_array($data);
-
             if ($structure->isMultiple()) {
-                if (!$isArray) {
-                    if ($data == '') {
-                        return [];
-                    }
-
-                    return [self::recursiveParse($data, $structure)];
+                if (!is_array($data)) {
+                    return ($data == '') ? [] : [self::recursiveParse($data, $structure)];
                 }
 
                 $tmpArray = [];

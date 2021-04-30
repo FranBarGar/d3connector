@@ -15,5 +15,5 @@ interface ParserInterface
      * @return array
      * @throws StructureArrayException
      */
-    public function parse(array $data);
+    public function parse(array $data): array;
 }

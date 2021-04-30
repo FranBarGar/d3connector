@@ -11,15 +11,17 @@ class Utils
     /**
      * @param array $array
      * @param int $initPosition
-     * @param int $length
+     * @param int|null $length
      * @param bool $multiple
-     * @return null|array
+     * @return array|null
      */
-    public static function restructureInverse(array $array, $initPosition = 0, $length = null, $multiple = false)
+    public static function restructureInverse(
+        array $array, int $initPosition = 0, ?int $length = null, bool $multiple = false
+    ): ?array
     {
         $subArray = array_slice($array, $initPosition, $length);
 
-        if ($subArray[0] === null) {
+        if (self::getProperty($subArray, 0) === null) {
             return null;
         }
 
@@ -30,8 +32,26 @@ class Utils
             $subArray
         );
 
-        if (!$multiple) return array_map(null, ...$newData)[0];
+        return (!$multiple) ?
+            self::getProperty(array_map(null, ...$newData), 0) : array_map(null, ...$newData);
+    }
 
-        return array_map(null, ...$newData);
+    /**
+     * @param array $haystack
+     * @param string $needle
+     * @param mixed|null $default
+     * @return mixed|null
+     */
+    public static function getProperty(array $haystack, string $needle, $default = null)
+    {
+        return (is_array($haystack) && isset($haystack[$needle])) ? $haystack[$needle] : $default;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getDate(): string
+    {
+        return (new \DateTime())->format('Y-m-d H:i:s.u');
     }
 }

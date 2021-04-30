@@ -11,10 +11,10 @@ interface JD3RequestDataInterface
     /**
      * @return array
      */
-    public function arrayToD3();
+    public function arrayToD3(): array;
 
     /**
      * @return string
      */
-    public function getRoutineName();
+    public function getRoutineName(): string;
 }

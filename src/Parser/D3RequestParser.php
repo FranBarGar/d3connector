@@ -13,15 +13,19 @@ class D3RequestParser extends BaseParser
      * @param int $position
      * @return string
      */
-    public function parseElementsRecursive($elements, $position = 0)
+    public function parseElementsRecursive($elements, $position = 0): string
     {
-        foreach ($elements as $key => $element) {
-            if (is_array($element)) {
-                $elements[$key] = $this->parseElementsRecursive($element, $position + 1);
-            } else {
-                $elements[$key] = utf8_decode($elements[$key]);
+        if (is_array($elements)) {
+            foreach ($elements as $key => $element) {
+                if (is_array($element)) {
+                    $elements[$key] = $this->parseElementsRecursive($element, $position + 1);
+                } else {
+                    $elements[$key] = utf8_decode($element);
+                }
             }
+            return implode($this->separators[$position], $elements);
         }
-        return implode($this->separators[$position], $elements);
+
+        return '';
     }
 }

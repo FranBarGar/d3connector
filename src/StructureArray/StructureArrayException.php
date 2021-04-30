@@ -1,9 +1,8 @@
 <?php
 
 namespace mortalswat\d3connector\StructureArray;
-use Exception;
 
-;
+use Exception;
 
 /**
  * Class StructureArrayException

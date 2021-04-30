@@ -15,7 +15,7 @@ class D3ResultParser extends BaseParser
     /**
      * @param $string
      * @param int $position
-     * @return array
+     * @return array|string|null
      */
     public function parseElementsRecursive($string, $position = 0)
     {
@@ -32,23 +32,16 @@ class D3ResultParser extends BaseParser
                 return $array;
             }
 
-//            Equivalente este bloque al de abajo, siendo el último más eficiente ya que
-//            consigue optimizar la pila de llamadas
-//            for ($indexndex = $position + 1; $indexndex < $numberSeparators; ++$indexndex) {
-//                if (false !== \strpos($string, $this->$separators[$indexndex])) {
-//                    return [$this->parseElementsRecursive($string, $position + 1)];
-//                }
-//            }
             $auxArray = [];
-            for ($indexndex = $position + 1; $indexndex < $numberSeparators; ++$indexndex) {
-                if (false !== strpos($string, $this->separators[$indexndex])) {
-                    $auxArray[] = $this->parseElementsRecursive($string, $indexndex);
+            for ($i = $position + 1; $i < $numberSeparators; ++$i) {
+                if (false !== strpos($string, $this->separators[$i])) {
+                    $auxArray[] = $this->parseElementsRecursive($string, $i);
                     return $auxArray;
                 }
                 $auxArray[] = [];
             }
         }
 
-        return ($string == '' ? null : $string);
+        return ($string === '' ? null : $string);
     }
 }

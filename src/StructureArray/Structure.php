@@ -21,18 +21,13 @@ class Structure
 
     /**
      * Structure constructor.
-     * @param $name
-     * @param $multiple
-     * @param $numeric
-     * @param $undefined
+     * @param string $name
+     * @param bool $multiple
+     * @param bool $numeric
+     * @param bool $undefined
      * @param array $object
      */
-    public function __construct(
-        $name,
-        $multiple,
-        $numeric,
-        $undefined,
-        array $object = []
+    public function __construct(string $name, bool $multiple, bool $numeric, bool $undefined, array $object = []
     )
     {
         $this->name = $name;
@@ -49,12 +44,7 @@ class Structure
      * @param bool $undefined
      * @return Structure
      */
-    public static function create(
-        $name,
-        $multiple = false,
-        $numeric = false,
-        $undefined = false
-    )
+    public static function create($name, $multiple = false, $numeric = false, $undefined = false): Structure
     {
         return new Structure($name, $multiple, $numeric, $undefined);
     }
@@ -62,7 +52,7 @@ class Structure
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -71,7 +61,7 @@ class Structure
      * @param $name
      * @return $this
      */
-    public function setName($name)
+    public function setName($name): self
     {
         $this->name = $name;
         return $this;
@@ -80,7 +70,7 @@ class Structure
     /**
      * @return bool
      */
-    public function isMultiple()
+    public function isMultiple(): bool
     {
         return $this->multiple;
     }
@@ -89,7 +79,7 @@ class Structure
      * @param $multiple
      * @return $this
      */
-    public function setMultiple($multiple)
+    public function setMultiple($multiple): self
     {
         $this->multiple = $multiple;
         return $this;
@@ -98,7 +88,7 @@ class Structure
     /**
      * @return bool
      */
-    public function isNumeric()
+    public function isNumeric(): bool
     {
         return $this->numeric;
     }
@@ -106,7 +96,7 @@ class Structure
     /**
      * @return bool
      */
-    public function isUndefined()
+    public function isUndefined(): bool
     {
         return $this->undefined;
     }
@@ -114,7 +104,7 @@ class Structure
     /**
      * @return bool
      */
-    public function isObject()
+    public function isObject(): bool
     {
         return !empty($this->object);
     }
@@ -122,7 +112,7 @@ class Structure
     /**
      * @return Structure[]
      */
-    public function getProperties()
+    public function getProperties(): array
     {
         return $this->object;
     }
@@ -131,7 +121,7 @@ class Structure
      * @param $object
      * @return $this
      */
-    public function setObject($object)
+    public function setObject($object): self
     {
         $this->object = $object;
         return $this;

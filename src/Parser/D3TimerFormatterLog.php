@@ -14,9 +14,9 @@ class D3TimerFormatterLog implements FormatterInterface
      * Formats a log record.
      *
      * @param array $record A record to format
-     * @return mixed The formatted record
+     * @return string The formatted record
      */
-    public function format(array $record)
+    public function format(array $record): string
     {
         $messages = json_decode($record['message'], true);
 
@@ -63,7 +63,7 @@ class D3TimerFormatterLog implements FormatterInterface
     /**
      * @return string
      */
-    private function endRequest()
+    private function endRequest(): string
     {
         return ("\n" . str_repeat('-', 10) . "\n");
     }
@@ -72,9 +72,9 @@ class D3TimerFormatterLog implements FormatterInterface
      * Formats a set of log records.
      *
      * @param array $records A set of records to format
-     * @return mixed The formatted set of records
+     * @return string The formatted set of records
      */
-    public function formatBatch(array $records)
+    public function formatBatch(array $records): string
     {
         return '';
     }
