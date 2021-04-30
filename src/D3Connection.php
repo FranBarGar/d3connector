@@ -66,17 +66,18 @@ class D3Connection
      * @param string $xmlFile
      * @param string|null $logger
      * @param string|null $timeLogger
-     * @param int $logMode
-     * @param int $logTruncate
-     * @param int $logFieldTruncate
+     * @param int|null $logMode
+     * @param int|null $logTruncate
+     * @param int|null $logFieldTruncate
+     * @throws \Exception
      */
     public function __construct(
         string $xmlFile,
         ?string $logger = null,
         ?string $timeLogger = null,
-        int $logMode = 0,
-        int $logTruncate = 250,
-        int $logFieldTruncate = 100
+        ?int $logMode = 0,
+        ?int $logTruncate = 250,
+        ?int $logFieldTruncate = null
     )
     {
         $this->setLogger($logger, $logMode, $logTruncate, $logFieldTruncate);
@@ -90,11 +91,12 @@ class D3Connection
     /**
      * Configura el log generico
      * @param string|null $logger
-     * @param int $logMode
-     * @param int $logTruncate
-     * @param int $logFieldTruncate
+     * @param int|null $logMode
+     * @param int|null $logTruncate
+     * @param int|null $logFieldTruncate
+     * @throws \Exception
      */
-    private function setLogger(?string $logger, int $logMode, int $logTruncate, int $logFieldTruncate): void
+    private function setLogger(?string $logger, ?int $logMode, ?int $logTruncate, ?int $logFieldTruncate): void
     {
         if ($logger !== null) {
             $this->logger = new Logger('files');

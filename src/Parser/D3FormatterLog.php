@@ -11,9 +11,9 @@ use Monolog\Formatter\FormatterInterface;
 class D3FormatterLog implements FormatterInterface
 {
     const LOG_MODE_CONFIG = [
-        0 => [self::TITTLE_LOG_LLAMADA, self::TITTLE_LOG_RESPUESTA_ARRAY, self::TITTLE_LOG_ERROR, ],
-        1 => [self::TITTLE_LOG_PREPARACION, self::TITTLE_LOG_LLAMADA, self::TITTLE_LOG_RESPUESTA_ARRAY, self::TITTLE_LOG_ERROR, ],
-        2 => [self::TITTLE_LOG_LLAMADA, self::TITTLE_LOG_RESPUESTA_BRUTA, self::TITTLE_LOG_RESPUESTA_ARRAY, self::TITTLE_LOG_ERROR, ],
+        0 => [self::TITTLE_LOG_LLAMADA, self::TITTLE_LOG_RESPUESTA_ARRAY, self::TITTLE_LOG_ERROR,],
+        1 => [self::TITTLE_LOG_PREPARACION, self::TITTLE_LOG_LLAMADA, self::TITTLE_LOG_RESPUESTA_ARRAY, self::TITTLE_LOG_ERROR,],
+        2 => [self::TITTLE_LOG_LLAMADA, self::TITTLE_LOG_RESPUESTA_BRUTA, self::TITTLE_LOG_RESPUESTA_ARRAY, self::TITTLE_LOG_ERROR,],
     ];
 
     const TITTLE_LOG = 'Tittle';
@@ -38,10 +38,21 @@ class D3FormatterLog implements FormatterInterface
     private $logLength;
     private $fieldLength;
 
-    public function __construct(int $logMode = 0, int $logLength = 250, int $fieldLength = 100)
+    /**
+     * D3FormatterLog constructor.
+     * @param int|null $logMode
+     * @param int|null $logLength
+     * @param int|null $fieldLength
+     * @throws \Exception
+     */
+    public function __construct(?int $logMode = 0, ?int $logLength = 250, ?int $fieldLength = null)
     {
-        $this->logMode = $logMode;
+        if (!isset(self::LOG_MODE_CONFIG[$logMode])) {
+            throw new \LogicException('El modo de logueo no es valido.');
+        }
+
         $this->logLength = $logLength;
+        $this->logMode = $logMode;
         $this->fieldLength = $fieldLength;
     }
 
@@ -95,7 +106,7 @@ class D3FormatterLog implements FormatterInterface
                 $body = $this->parseElementsD3($message[self::BODY_LOG]);
                 break;
             case self::TITTLE_LOG_RESPUESTA_ARRAY:
-                if (is_array($message[self::BODY_LOG])) {
+                if (is_array($message[self::BODY_LOG]) && $this->fieldLength !== null) {
                     array_walk_recursive($message[self::BODY_LOG], function (&$item, $key) {
                         if (strlen($item) > $this->fieldLength) {
                             $item = substr($item, 0, $this->fieldLength) . ' . . .';
@@ -110,7 +121,7 @@ class D3FormatterLog implements FormatterInterface
         }
 
         $logResult = ($header . $body);
-        if (strlen($logResult) > $this->logLength) {
+        if ($this->logLength !== null && strlen($logResult) > $this->logLength) {
             $logResult = substr($logResult, 0, $this->logLength) . " . . .\n";
         }
 
@@ -130,11 +141,13 @@ class D3FormatterLog implements FormatterInterface
             return $result;
         }
 
-        array_walk_recursive($params, function (&$item, $key) {
-            if (strlen($item) > $this->fieldLength) {
-                $item = substr($item, 0, $this->fieldLength) . ' . . .';
-            }
-        });
+        if ($this->fieldLength !== null) {
+            array_walk_recursive($params, function (&$item, $key) {
+                if (strlen($item) > $this->fieldLength) {
+                    $item = substr($item, 0, $this->fieldLength) . ' . . .';
+                }
+            });
+        }
 
         foreach ($params as $param) {
             if (is_array($param)) {
