@@ -260,37 +260,39 @@ class D3Connection
 
         try {
             $settings = self::loadSettings($xmlFile);
+            $active = $settings['active'] ?? null;
 
-            if (Utils::getProperty($settings, 'active', '0') === '0') {
-                throw new D3Exception('El pool de conexiones está deshabilitado');
+            if ($active === null || is_array($active)) {
+                throw new D3Exception('D3: El pool de conexiones no está correctamente configurado');
+            } elseif ($active === '0') {
+                throw new D3Exception('D3: El pool de conexiones está deshabilitado');
             }
 
-            $serverSettings = Utils::getProperty($settings, 'server');
-            if (is_array($serverSettings)) {
-                $serverSettings = $serverSettings[0];
-            }
-
-            if (!(
-                $serverSettings !== null &&
-                isset($serverSettings['mainport']) &&
-                isset($serverSettings['host']) &&
-                isset($serverSettings['timeout'])
-            )) {
-                throw new D3Exception('El pool de conexiones no está correctamente configurado');
+            $serverSettings = $settings['server'][0] ?? null;
+            if (
+                $serverSettings === null ||
+                !isset($serverSettings['mainport']) ||
+                !isset($serverSettings['host']) ||
+                !isset($serverSettings['timeout'])
+            ) {
+                throw new D3Exception('D3: El pool de conexiones no está correctamente configurado');
             }
 
             $serverTimeout = $serverSettings['timeout'];
-            $this->sockopenMainTimeout = Utils::getProperty($serverTimeout, 'main', 5);
-            $this->sockopenChildTimeout = Utils::getProperty($serverTimeout, 'child', 5);
-            $this->d3routineTimeout = Utils::getProperty($serverTimeout, 'io', 60);
+            $this->sockopenMainTimeout = $serverTimeout['main'] ?? 5;
+            $this->sockopenChildTimeout = $serverTimeout['child'] ?? 5;
+            $this->d3routineTimeout = $serverTimeout['io'] ?? 60;
 
             $this->port = $serverSettings['mainport'];
             $this->server = $serverSettings['host'];
 
             $this->logInfo[0][D3FormatterLog::XML_LOG] = '($xmlStart -> ' . Utils::getDate() . ') XML';
+        } catch (D3Exception $exception) {
+            $this->logInfo[0][D3FormatterLog::XML_LOG] = '($xmlStart -> ' . Utils::getDate() . ') Error XML';
+            throw new D3Exception($exception->getMessage());
         } catch (Exception $exception) {
             $this->logInfo[0][D3FormatterLog::XML_LOG] = '($xmlStart -> ' . Utils::getDate() . ') Error XML';
-            throw new D3Exception('D3: Error al cargar el xml de conexión (' . $exception->getMessage() . ')');
+            throw new D3Exception('D3: Error al cargar el xml de conexión');
         }
 
         $this->isXmlLoaded = true;

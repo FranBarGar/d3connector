@@ -21,7 +21,7 @@ class Utils
     {
         $subArray = array_slice($array, $initPosition, $length);
 
-        if (self::getProperty($subArray, 0) === null) {
+        if (($subArray[0] ?? null) === null) {
             return null;
         }
 
@@ -33,18 +33,7 @@ class Utils
         );
 
         return (!$multiple) ?
-            self::getProperty(array_map(null, ...$newData), 0) : array_map(null, ...$newData);
-    }
-
-    /**
-     * @param array $haystack
-     * @param string $needle
-     * @param mixed|null $default
-     * @return mixed|null
-     */
-    public static function getProperty(array $haystack, string $needle, $default = null)
-    {
-        return (is_array($haystack) && isset($haystack[$needle])) ? $haystack[$needle] : $default;
+            (array_map(null, ...$newData)[0] ?? null) : array_map(null, ...$newData);
     }
 
     /**
