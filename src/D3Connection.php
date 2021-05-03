@@ -263,7 +263,7 @@ class D3Connection
             $active = $settings['active'] ?? null;
 
             if ($active === null || is_array($active)) {
-                throw new D3Exception('D3: El pool de conexiones no está correctamente configurado');
+                throw new D3Exception('D3: El campo "active" del pool de conexiones no está correctamente configurado');
             } elseif ($active === '0') {
                 throw new D3Exception('D3: El pool de conexiones está deshabilitado');
             }
@@ -275,7 +275,7 @@ class D3Connection
                 !isset($serverSettings['host']) ||
                 !isset($serverSettings['timeout'])
             ) {
-                throw new D3Exception('D3: El pool de conexiones no está correctamente configurado');
+                throw new D3Exception('D3: Los datos de conexión del pool de conexiones no están correctamente configurados');
             }
 
             $serverTimeout = $serverSettings['timeout'];
