@@ -269,16 +269,16 @@ class D3Connection
             }
 
             $serverSettings = $settings['server'][0] ?? null;
+            $serverTimeout = $serverSettings['timeout'][0] ?? null;
             if (
                 $serverSettings === null ||
                 !isset($serverSettings['mainport']) ||
                 !isset($serverSettings['host']) ||
-                !isset($serverSettings['timeout'])
+                $serverTimeout === null
             ) {
                 throw new D3Exception('D3: Los datos de conexión del pool de conexiones no están correctamente configurados');
             }
 
-            $serverTimeout = $serverSettings['timeout'];
             $this->sockopenMainTimeout = $serverTimeout['main'] ?? 5;
             $this->sockopenChildTimeout = $serverTimeout['child'] ?? 5;
             $this->d3routineTimeout = $serverTimeout['io'] ?? 60;
