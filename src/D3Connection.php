@@ -253,7 +253,7 @@ class D3Connection
      * @param $xmlFile
      * @throws D3Exception
      */
-    public function loadD3Connection($xmlFile)
+    public function loadD3Connection($xmlFile): void
     {
         $xmlStart = Utils::getDate();
         $this->logInfo[0][D3FormatterLog::DATETIME_LOG] = $xmlStart;
@@ -270,19 +270,11 @@ class D3Connection
 
             $serverSettings = $settings['server'][0] ?? null;
             $serverTimeout = $serverSettings['timeout'][0] ?? null;
-            if (
-                $serverSettings === null ||
-                !isset($serverSettings['mainport']) ||
-                !isset($serverSettings['host']) ||
-                $serverTimeout === null
-            ) {
-                throw new D3Exception('D3: Los datos de conexión del pool de conexiones no están correctamente configurados');
-            }
+            $this->assertSettings($serverSettings, $serverTimeout);
 
-            $this->sockopenMainTimeout = $serverTimeout['main'] ?? 5;
-            $this->sockopenChildTimeout = $serverTimeout['child'] ?? 5;
+            $this->sockopenMainTimeout = $serverTimeout['main'] ?? 30;
+            $this->sockopenChildTimeout = $serverTimeout['child'] ?? 30;
             $this->d3routineTimeout = $serverTimeout['io'] ?? 60;
-
             $this->port = $serverSettings['mainport'];
             $this->server = $serverSettings['host'];
 
@@ -296,6 +288,35 @@ class D3Connection
         }
 
         $this->isXmlLoaded = true;
+    }
+
+    /**
+     * @param $serverSettings
+     * @param $serverTimeout
+     * @throws \mortalswat\d3connector\D3Exception
+     */
+    private function assertSettings($serverSettings, $serverTimeout): void
+    {
+
+        if (
+            $serverSettings === null ||
+            !isset($serverSettings['mainport']) ||
+            $serverSettings['mainport'] === '' ||
+            !isset($serverSettings['host']) ||
+            $serverSettings['host'] === '' ||
+            $serverTimeout === null ||
+            ($serverTimeout['main'] ?? null) === null
+        ) {
+            throw new D3Exception('D3: Los datos de conexión del pool de conexiones no están correctamente configurados');
+        }
+
+        if (
+            !is_numeric($serverTimeout['main'] ?? 30) ||
+            !is_numeric($serverTimeout['child'] ?? 30) ||
+            !is_numeric($serverTimeout['io'] ?? 60)
+        ) {
+            throw new D3Exception('D3: Los datos de timeout del pool de conexiones no están correctamente configurados');
+        }
     }
 
     /**
